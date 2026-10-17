@@ -70,7 +70,12 @@
     window.__invokeObjects = ts.map(function (t) { return { name: t.name, keys: Object.keys(t), desc: t.description }; });
     if (!pick) { window.__invoke = { ok: false, error: 'no tool at index ' + nth + ' of ' + hits.length, names: window.__invokeObjects }; rec(); return window.__invoke; }
     try {
-      var r = await document.modelContext.executeTool(pick, input);
+      var r;
+      try { r = await document.modelContext.executeTool(pick, input); }
+      catch (e1) {
+        if (String((e1 && e1.message) || e1).indexOf('Failed to parse input') !== 0) throw e1;
+        r = await document.modelContext.executeTool(pick, JSON.stringify(input));
+      }
       window.__invoke = { ok: true, name: name, nth: nth, result: r };
     } catch (e) {
       window.__invoke = { ok: false, name: name, nth: nth, error: (e && e.message) || String(e), stack: (e && e.stack) || null };

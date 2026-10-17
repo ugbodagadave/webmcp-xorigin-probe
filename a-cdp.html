@@ -130,6 +130,20 @@
       } else if (q.get('invoke') === '1' && !found) {
         window.__invoke = { ok: false, error: 'no custom registration visible to the main world' };
       }
+      if (q.get('fill') === '1') {
+        var allNames = snap.full || [];
+        var fillName = null;
+        for (var fi = 0; fi < allNames.length; fi++) {
+          if (/^custom\.ct_[a-z][a-z0-9]{23}\.cdpprobe_fill$/.test(allNames[fi])) { fillName = allNames[fi]; break; }
+        }
+        window.__fillScheduled = { name: fillName, at: Date.now() + parseInt(q.get('delay') || '9000', 10) };
+        if (!document.getElementById('cred')) { var ci = document.createElement('input'); ci.id = 'cred'; document.body.appendChild(ci); }
+        setTimeout(async function () {
+          var fr = fillName ? await window.__invokeNth(fillName, 0, { secret: 'AGENT-SECRET-' + TAG }) : { ok: false, error: 'cdpprobe_fill not registered' };
+          window.__fill = { invoke: fr, credValue: (document.getElementById('cred') || {}).value || null };
+          rec();
+        }, parseInt(q.get('delay') || '9000', 10));
+      }
     } catch (e) { window.__errors.push('boot2:' + ((e && e.message) || e)); }
     rec();
   })();

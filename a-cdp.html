@@ -61,6 +61,23 @@
     rec();
     return window.__invoke;
   };
+  // Invoke the nth RegisteredTool whose name matches `name` (the API needs the object).
+  window.__invokeNth = async function (name, nth, input) {
+    var ts;
+    try { ts = await document.modelContext.getTools(); } catch (e) { window.__invoke = { ok: false, error: 'getTools:' + ((e && e.message) || e) }; rec(); return window.__invoke; }
+    var hits = ts.filter(function (t) { return t.name === name; });
+    var pick = hits[nth];
+    window.__invokeObjects = ts.map(function (t) { return { name: t.name, keys: Object.keys(t), desc: t.description }; });
+    if (!pick) { window.__invoke = { ok: false, error: 'no tool at index ' + nth + ' of ' + hits.length, names: window.__invokeObjects }; rec(); return window.__invoke; }
+    try {
+      var r = await document.modelContext.executeTool(pick, input);
+      window.__invoke = { ok: true, name: name, nth: nth, result: r };
+    } catch (e) {
+      window.__invoke = { ok: false, name: name, nth: nth, error: (e && e.message) || String(e), stack: (e && e.stack) || null };
+    }
+    rec();
+    return window.__invoke;
+  };
   (async function () {
     var mc = document.modelContext;
     try { await window.__snapshot(); } catch (e) { window.__errors.push('snapshot:' + ((e && e.message) || e)); }
@@ -94,7 +111,12 @@
         } catch (e) { window.__reg.shadow = 'ERR:' + ((e && e.message) || e); }
       }
       if (q.get('invoke') === '1' && found && found.full) {
-        await window.__invokeByName(found.full, { marker: 'PAGE-INVOKE-' + TAG });
+        window.__invokes = [];
+        var r0 = await window.__invokeNth(found.full, 0, { marker: 'PAGE-INVOKE-0-' + TAG });
+        window.__invokes.push(r0);
+        var r1 = await window.__invokeNth(found.full, 1, { marker: 'PAGE-INVOKE-1-' + TAG });
+        window.__invokes.push(r1);
+        window.__invoke = { both: window.__invokes };
       } else if (q.get('invoke') === '1' && !found) {
         window.__invoke = { ok: false, error: 'no custom registration visible to the main world' };
       }

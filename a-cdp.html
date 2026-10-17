@@ -116,12 +116,17 @@
         } catch (e) { window.__reg.shadow = 'ERR:' + ((e && e.message) || e); }
       }
       if (q.get('invoke') === '1' && found && found.full) {
-        window.__invokes = [];
-        var r0 = await window.__invokeNth(found.full, 0, { marker: 'PAGE-INVOKE-0-' + TAG });
-        window.__invokes.push(r0);
-        var r1 = await window.__invokeNth(found.full, 1, { marker: 'PAGE-INVOKE-1-' + TAG });
-        window.__invokes.push(r1);
-        window.__invoke = { both: window.__invokes };
+        // Run outside any concurrent REPL cell: the page-invocation path refuses
+        // while the Browser REPL is executing another cell.
+        var delay = parseInt(q.get('delay') || '9000', 10);
+        window.__invokeScheduled = { name: found.full, at: Date.now() + delay };
+        setTimeout(async function () {
+          window.__invokes = [];
+          var r0 = await window.__invokeNth(found.full, 0, { marker: 'PAGE-INVOKE-0-' + TAG });
+          window.__invokes.push(r0);
+          window.__invoke = { both: window.__invokes };
+          rec();
+        }, delay);
       } else if (q.get('invoke') === '1' && !found) {
         window.__invoke = { ok: false, error: 'no custom registration visible to the main world' };
       }

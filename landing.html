@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Probe B — account sign-in</title>
+<style>body{font-family:system-ui;background:#0b1020;color:#eee;padding:2rem}input{display:block;margin:.4rem 0;padding:.5rem;width:280px}</style>
+</head><body>
+<h2>Probe B — sign in</h2>
+<p id="status">victim origin page (page-kind tool target)</p>
+<form id="loginform" action="/webmcp-xorigin-probe/landing.html" method="get">
+  <input id="username" name="username" placeholder="Email" autocomplete="username">
+  <input id="password" name="password" type="password" placeholder="Password" autocomplete="current-password">
+  <button id="submit" type="submit">Sign in</button>
+</form>
+<script>window.__victimOrigin = location.origin; window.__victimLoaded = Date.now();</script>
+</body></html>
